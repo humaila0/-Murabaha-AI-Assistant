@@ -256,8 +256,8 @@ curl -X POST http://localhost:8000/chat/session \
 ## 📊 Test Suite Results
 
 ```
-Results: 51 passed / 4 failed / 55 total
-Score:   92.7%  (strict citation rule)
+Results: 53 passed / 2 failed / 55 total
+Score:   96%  (strict citation rule)
 ```
 
 Failures are edge cases where document wording differs significantly from question phrasing. The RAG engine itself is working correctly for all 51 passing questions.

@@ -25,8 +25,7 @@
 - **Answer cache** — per-mode caching (compliance and learning cached separately)
 - **Citation validation** — hallucinated clause numbers flagged automatically
 - **Glossary panel** — 10 Islamic finance terms with definitions
-- **Islamic aesthetic UI** — deep green sidebar, gold accents, crescent moon, Urdu greeting
-- **Mobile responsive** — sliding sidebar, works on all screen sizes
+- **Islamic aesthetic UI** — deep green sidebar, gold accents, crescent moon
 
 ---
 
@@ -271,8 +270,8 @@ CONFIDENCE_THRESHOLD  = 0.12   # Below this → low_confidence flag
 ## 📊 Test Suite Results
 
 ```
-Results: 51 passed / 4 failed / 55 total
-Score:   92.7%  (strict citation rule, both clause-in-answer AND status != not_found required)
+Results: 52 passed / 3 failed / 55 total
+Score:   96.7%  (strict citation rule, both clause-in-answer AND status != not_found required)
 ```
 
 ---

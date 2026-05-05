@@ -1,29 +1,29 @@
-# -Murabaha-AI-Assistant
-
 # ☽ Murabaha AI Assistant
 
-> A Shari'a-compliant Islamic finance chatbot for **Buraq Bank Pakistan**, powered by AAOIFI Shari'a Standard No. 08 (Murabaha). Built with a RAG (Retrieval-Augmented Generation) pipeline using Python, FastAPI, ChromaDB, and React.
+> A Shari'a-compliant Islamic finance chatbot for **Buraq Bank Pakistan**, powered by AAOIFI Shari'a Standard No. 08 (Murabaha). Built with a RAG pipeline using Python, FastAPI, ChromaDB, and React.
 
 ---
 
 ## 📸 Preview
 
-![Murabaha AI Assistant UI](./docs/preview.png)
+![Murabaha AI Assistant](./docs/preview.png)
 
 ---
 
 ## 🌟 Features
 
+- **Two answering modes** — Compliance Mode (strict clause-only) and Learning Mode (friendly explanations)
 - **Clause-cited answers** — every response references the exact SS-08 clause (e.g. "Per clause 2/3/1...")
-- **RAG pipeline** — retrieves relevant clauses from ChromaDB before asking GPT, no hallucination
+- **Query routing** — smart keyword-based routing directs questions to the most relevant clause groups before vector search
+- **Hard-coded answers** — general questions like "Is Murabaha halal?" and "What is Murabaha?" return instant accurate answers
+- **RAG pipeline** — retrieves top-8 relevant clauses from ChromaDB before asking GPT
 - **Session memory** — follow-up questions are rewritten into standalone queries before retrieval
-- **Topic browser sidebar** — all 10 SS-08 sections browsable (§1 Scope through §5 Receivables)
-- **Compliance Mode** — toggle to enforce strict clause citation in every answer
-- **Two-gate topic filter** — keyword check + similarity score rejects off-topic questions before LLM call
-- **Answer cache** — repeated questions served instantly at zero cost
+- **Topic browser sidebar** — all 10 SS-08 sections (§1 through §5/10) clickable
+- **Two-gate topic filter** — keyword check + similarity score rejects off-topic questions
+- **Answer cache** — per-mode caching (compliance and learning cached separately)
 - **Citation validation** — hallucinated clause numbers flagged automatically
-- **Glossary panel** — Islamic finance terms (Hamish Jiddiyyah, Arboun, Inah, Takaful, etc.)
-- **Islamic aesthetic UI** — deep green sidebar, gold accents, crescent moon motif, Urdu greeting
+- **Glossary panel** — 10 Islamic finance terms with definitions
+- **Islamic aesthetic UI** — deep green sidebar, gold accents, crescent moon, Urdu greeting
 - **Mobile responsive** — sliding sidebar, works on all screen sizes
 
 ---
@@ -36,9 +36,9 @@ User Question
       ▼
 ┌─────────────────┐
 │  React Frontend │  localhost:3000
-│  (MurabahaChat) │
+│  MurabahaChat   │  Compliance / Learning mode toggle
 └────────┬────────┘
-         │ POST /chat/session
+         │ POST /chat/session  (with mode: "compliance"|"learning")
          ▼
 ┌─────────────────┐
 │  FastAPI Backend│  localhost:8000
@@ -46,23 +46,28 @@ User Question
 └────────┬────────┘
          │
          ▼
-┌─────────────────────────────────────┐
-│           rag.py (RAG Engine)       │
-│                                     │
-│  1. Two-gate topic filter           │
-│  2. Cache check                     │
-│  3. similarity_search (ChromaDB)    │
-│  4. Score threshold check           │
-│  5. Build prompt with clauses       │
-│  6. GPT-4o-mini generates answer    │
-│  7. Validate cited clauses          │
-└────────┬────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│              rag.py (RAG Engine)             │
+│                                              │
+│  1. Hard-code check (Murabaha definition,    │
+│     halal questions → instant answer)        │
+│  2. Query routing (_route_question)          │
+│     → maps question to best clause keywords  │
+│  3. Cache check (per mode)                   │
+│  4. similarity_search_with_relevance_scores  │
+│     k=8 for broader retrieval                │
+│  5. Two-gate topic filter                    │
+│  6. Score threshold check                    │
+│  7. Choose prompt by mode                    │
+│     (compliance or learning prompt)          │
+│  8. GPT-4o-mini generates answer             │
+│  9. Validate cited clauses                   │
+└────────┬─────────────────────────────────────┘
          │
          ▼
 ┌─────────────────┐
 │   ChromaDB      │  ./chroma_db/
-│  67 SS-08 chunks│
-│  + embeddings   │
+│  67 SS-08 chunks│  + optional definition docs
 └─────────────────┘
 ```
 
@@ -72,24 +77,25 @@ User Question
 
 ```
 murabaha_bot/
-├── 📄 SS-08 Murabaha.pdf          # Source document (AAOIFI Shari'a Standard)
-├── 📄 murabaha_clean.txt          # Cleaned extracted text
-├── 📄 murabaha_qa_pairs.json      # 55 Q&A test pairs for evaluation
-├── 🐍 text_extraction.py          # PDF → clean text pipeline
-├── 🐍 chunk_and_ingest.py         # Chunking + embedding + ChromaDB ingestion
-├── 🐍 rag.py                      # RAG engine (ask, cache, filter, validate)
-├── 🐍 api.py                      # FastAPI backend server
-├── 🗄️  chroma_db/                 # Vector database (67 clause chunks)
-├── 📄 .env                        # API keys (not committed)
-├── 📄 requirements.txt            # Python dependencies
+├── 📄 SS-08 Murabaha.pdf           # Source — AAOIFI Shari'a Standard No. 08
+├── 📄 murabaha_clean.txt           # Cleaned extracted text
+├── 📄 murabaha_qa_pairs.json       # 55 Q&A test pairs
+├── 🐍 text_extraction.py           # PDF → clean text
+├── 🐍 chunk_and_ingest.py          # Chunk + embed + store in ChromaDB
+├── 🐍 rag.py                       # RAG engine with modes + routing
+├── 🐍 api.py                       # FastAPI backend
+├── 🐍 add_definition.py            # (optional) adds general Murabaha definition chunk
+├── 🗄️  chroma_db/                  # Vector database
+├── 📄 .env                         # API keys (not committed)
+├── 📄 requirements.txt             # Python dependencies
 │
-└── murabaha-frontend/             # React frontend
+└── murabaha-frontend/              # React frontend
     ├── 📄 index.html
     ├── 📄 package.json
     ├── 📄 vite.config.js
     └── src/
         ├── 📄 main.jsx
-        └── 📄 MurabahaChat.jsx    # Complete React app
+        └── 📄 MurabahaChat.jsx     # Complete React app
 ```
 
 ---
@@ -111,7 +117,6 @@ murabaha_bot/
 ## 🚀 Getting Started
 
 ### Prerequisites
-
 - Python 3.10+
 - Node.js 18+
 - OpenAI API key
@@ -139,51 +144,38 @@ pip install -r requirements.txt
 
 ### 3. Add your OpenAI API key
 
-Create a `.env` file in the root:
-
 ```env
+# .env
 OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-### 4. Build the knowledge base (run once)
+### 4. Build the knowledge base (once only)
 
 ```bash
-# Extract and clean the PDF
-python text_extraction.py
-
-# Chunk, embed and store in ChromaDB
-python chunk_and_ingest.py
+python text_extraction.py   # Clean the PDF
+python chunk_and_ingest.py  # Build ChromaDB
 ```
 
-Expected output:
-```
-Extracted 67 clause-level chunks
-Built 67 LangChain documents with metadata
-Embedding and storing in ChromaDB...
-Done. 67 clauses stored in ./chroma_db/
-```
-
-### 5. Test the RAG pipeline
+### 5. (Optional) Add general Murabaha definition
 
 ```bash
-# Quick 5-question test
-python rag.py
-
-# Full 55-question test suite
-python rag.py --full
+python add_definition.py    # Adds definition + process chunks for broad questions
 ```
 
-Target score: **92%+** (strict clause citation mode)
+### 6. Test RAG pipeline
 
-### 6. Start the backend API
+```bash
+python rag.py          # Quick 5-question test
+python rag.py --full   # Full 55-question suite (target: 92%+)
+```
+
+### 7. Start backend
 
 ```bash
 uvicorn api:app --reload --port 8000
 ```
 
-API docs available at: `http://localhost:8000/docs`
-
-### 7. Start the React frontend
+### 8. Start frontend
 
 ```bash
 cd murabaha-frontend
@@ -191,28 +183,46 @@ npm install
 npm run dev
 ```
 
-Open: `http://localhost:3000`
+Open: **http://localhost:3000**
 
 ---
 
-## 🧠 RAG Pipeline Details
+## 🧠 RAG Pipeline — Detailed Flow
 
-The RAG engine (`rag.py`) processes every question through 7 steps:
+### Query Routing
 
-1. **Gate 1 — Keyword filter** (free, instant): checks if question contains Murabaha-related keywords
-2. **Cache check**: returns cached answer instantly if question was asked before
-3. **Single retrieval**: `similarity_search_with_relevance_scores(question, k=6)` against ChromaDB
-4. **Gate 2 — Score threshold**: if top score < 0.05, returns "not found" without calling LLM
-5. **Topic filter**: if no keywords AND low score → rejects as off-topic
-6. **LLM call**: GPT-4o-mini receives retrieved clause text + strict Shari'a prompt
-7. **Citation validation**: regex checks answer for hallucinated clause numbers
+Before vector search, `_route_question()` maps common question patterns to the most relevant clause keywords. This dramatically improves retrieval for known question types:
+
+```python
+# Examples
+"hamish jiddiyyah" → "Clause 2/5/3 2/5/4 2/5/5 Hamish Jiddiyyah security deposit..."
+"bilateral promise" → "Clause 2/3/1 2/3/3 bilateral promise binding Murabaha"
+"bill of lading"   → "Clause 3/2/4 bill of lading constructive possession"
+"late payment"     → "Clause 4/8 delay payment extra payment late installment"
+```
+
+### Hard-Coded Answers
+
+General questions that don't match specific clauses are handled with pre-written answers:
+
+```python
+# "is murabaha halal" → instant answer citing 3/1/1 and 4/6
+# "what is murabaha"  → definition + process explanation
+```
+
+### Answering Modes
+
+```python
+# Compliance prompt — strict clause-only, always cites, states NOT PERMISSIBLE
+# Learning prompt   — friendly, full summary, extra detail, simple language
+```
 
 ### Threshold Configuration
 
 ```python
-SIMILARITY_THRESHOLD  = 0.05   # Below this → not_found (no LLM call)
+SIMILARITY_THRESHOLD  = 0.03   # Below this → not_found
 TOPIC_SCORE_THRESHOLD = 0.00   # Below this AND no keywords → off_topic
-CONFIDENCE_THRESHOLD  = 0.15   # Below this → low_confidence flag
+CONFIDENCE_THRESHOLD  = 0.12   # Below this → low_confidence flag
 ```
 
 ---
@@ -225,22 +235,26 @@ CONFIDENCE_THRESHOLD  = 0.15   # Below this → low_confidence flag
 | `POST` | `/chat` | Single question, stateless, cached |
 | `POST` | `/chat/session` | Conversation with memory |
 | `GET` | `/session/{id}` | Get conversation history |
-| `DELETE` | `/session/{id}` | Clear session memory |
+| `DELETE` | `/session/{id}` | Clear session |
 
-### Example request
+### Request with mode
 
-```bash
-curl -X POST http://localhost:8000/chat/session \
-  -H "Content-Type: application/json" \
-  -d '{"question": "Is bilateral promise allowed in Murabaha?", "session_id": "user-123"}'
+```json
+{
+  "question": "Is bilateral promise allowed in Murabaha?",
+  "session_id": "user-123",
+  "mode": "compliance"
+}
 ```
+
+`mode` options: `"compliance"` (default) or `"learning"`
 
 ### Example response
 
 ```json
 {
   "question": "Is bilateral promise allowed in Murabaha?",
-  "answer": "Per clause 2/3/1, a bilateral promise binding on both parties is NOT PERMISSIBLE. However, per clause 2/3/3, it is permissible if there is an option to cancel exercisable by either party.",
+  "answer": "Per clause 2/3/1, NOT PERMISSIBLE. However, per clause 2/3/3, permissible if cancellation option exists.",
   "retrieved_clauses": ["2/3/1", "2/3/2", "2/3/3"],
   "cited_clauses": ["2/3/1", "2/3/3"],
   "invalid_citations": [],
@@ -256,25 +270,21 @@ curl -X POST http://localhost:8000/chat/session \
 ## 📊 Test Suite Results
 
 ```
-Results: 53 passed / 2 failed / 55 total
-Score:   96%  (strict citation rule)
+Results: 51 passed / 4 failed / 55 total
+Score:   92.7%  (strict citation rule, both clause-in-answer AND status != not_found required)
 ```
-
-Failures are edge cases where document wording differs significantly from question phrasing. The RAG engine itself is working correctly for all 51 passing questions.
 
 ---
 
-## 📚 Knowledge Base
+## 📚 SS-08 Coverage
 
-Built from **AAOIFI Shari'a Standard No. 08 — Murabaha**, covering:
-
-| Section | Topic | Clauses |
+| Section | Topic | Key Clauses |
 |---|---|---|
-| §1 | Scope of the Standard | 1 |
-| §2 | Procedures Prior to Contract | 2/1 – 2/5 |
-| §3 | Asset Acquisition & Possession | 3/1 – 3/2 |
-| §4 | Conclusion of Murabaha Contract | 4/1 – 4/11 |
-| §5 | Guarantees & Receivables | 5/1 – 5/10 |
+| §1 | Scope | General definition |
+| §2/1–2/5 | Pre-Contract Procedures | Promise, Hamish Jiddiyyah, Arboun, fees |
+| §3/1–3/2 | Asset Acquisition & Possession | Ownership, bill of lading, insurance |
+| §4/1–4/11 | Contract Conclusion | Pricing, profit, defects, disclosure |
+| §5/1–5/10 | Guarantees & Receivables | Late payment, rescheduling, early settlement |
 
 ---
 
@@ -282,13 +292,13 @@ Built from **AAOIFI Shari'a Standard No. 08 — Murabaha**, covering:
 
 | Variable | Description |
 |---|---|
-| `OPENAI_API_KEY` | Your OpenAI API key (required) |
+| `OPENAI_API_KEY` | OpenAI API key (required) |
 
 ---
 
 ## 📦 Python Dependencies
 
-```txt
+```
 langchain
 langchain-openai
 langchain-chroma
@@ -300,38 +310,20 @@ python-dotenv
 pypdf
 ```
 
-Install all:
-```bash
-pip install -r requirements.txt
-```
-
 ---
 
 ## ⚠️ Disclaimer
 
-This chatbot provides guidance based on AAOIFI Shari'a Standard No. 08 only. For binding legal opinions or complex transactions, always consult your **Shari'a Supervisory Board**. Answers are indicative and not a substitute for qualified Shari'a advice.
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m 'Add your feature'`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE) for details.
+This chatbot provides guidance based on AAOIFI Shari'a Standard No. 08 only. For binding opinions or complex transactions, always consult your **Shari'a Supervisory Board**.
 
 ---
 
 ## 👤 Author
+
 humaila0
 
+---
+
 <div align="center">
-  <sub>Built with ☽ for Islamic Finance · Powered by AAOIFI SS-08</sub>
+  <sub>Built with ☽ for Islamic Finance · AAOIFI SS-08 · Buraq Bank Pakistan</sub>
 </div>

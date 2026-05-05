@@ -117,7 +117,6 @@ murabaha_bot/
 
 ### Prerequisites
 - Python 3.10+
-- Node.js 18+
 - OpenAI API key
 
 ### 1. Clone the repository

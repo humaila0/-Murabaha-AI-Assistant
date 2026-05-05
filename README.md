@@ -7,6 +7,9 @@
 ## 📸 Preview
 
 ![Murabaha AI Assistant Preview](./preview1.png)
+![Murabaha AI Assistant Preview](./preview2.png)
+![Murabaha AI Assistant Preview](./preview3.png)
+
 ---
 
 ## 🌟 Features

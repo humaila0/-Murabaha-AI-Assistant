@@ -6,7 +6,7 @@
 
 ## 📸 Preview
 
-![Murabaha AI Assistant](./docs/preview.png)
+![Murabaha AI Assistant](/preview.png)
 
 ---
 

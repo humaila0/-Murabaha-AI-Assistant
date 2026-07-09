@@ -1,6 +1,6 @@
 # ☽ Murabaha AI Assistant
 
-> A Shari'a-compliant Islamic finance chatbot for **Buraq Bank Pakistan**, powered by AAOIFI Shari'a Standard No. 08 (Murabaha). Built with a RAG pipeline using Python, FastAPI, ChromaDB, and React.
+> A Shari'a-compliant Islamic finance chatbot, powered by AAOIFI Shari'a Standard No. 08 (Murabaha). Built with a RAG pipeline using Python, FastAPI, ChromaDB, and React.
 
 ---
 
